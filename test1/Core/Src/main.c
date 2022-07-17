@@ -65,7 +65,7 @@ static void MX_TIM2_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	uint16_t timer_val; //starting timer value
+	uint32_t timer_val; //starting timer value
 	unsigned long count; //tracks the returned binary data from the HX711
 	int i; //for loop index
   /* USER CODE END 1 */
@@ -100,15 +100,28 @@ int main(void)
   while (1)
   {
 	  //reset timer here if necessary, not sure about the counter register size for timer
+	  __HAL_TIM_SET_COUNTER(&htim2,0); //may need to check the syntax
 	  count = 0; //reset stored binary data
     /* USER CODE END WHILE */
 
-	  while(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) != GPIO_PIN_RESET){ //assuming there is no delay for init of HX711
+	  while(1){ //stops random signal fluctuation, checks for data transmission
+		  if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) == GPIO_PIN_RESET){
+			  timer_val = __HAL_TIM_GET_COUNTER(&htim2); //assume this line of code executes fast
+			  while((__HAL_TIM_GET_COUNTER(&htim2) - timer_val) < 1){//check for timer overflow problem
+
+			  }
+			  if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) == GPIO_PIN_RESET){
+				  break;
+			  }
+		  }
+	  }
+
+	 ///// while(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) != GPIO_PIN_RESET){ //assuming there is no delay for init of HX711
 		  //traps the code execution
 		  //wait for DOUT on the HX711 to become ready to send out data
 
 		  /* may need to check for sudden spikes here */
-	  }
+	 ///// }
 
 	  timer_val = __HAL_TIM_GET_COUNTER(&htim2); //assume this line of code executes fast
 	  while((__HAL_TIM_GET_COUNTER(&htim2) - timer_val) < 1){//check for timer overflow problem
